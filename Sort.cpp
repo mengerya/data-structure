@@ -112,6 +112,55 @@ void selectsort(int array[], int size){
 	}
 }
 
+
+void AdjustDown(int array[], int root,int size){
+	int parent = root;
+	//默认左孩子值大
+	//如果parent不是叶节点就不用进行调整 
+	while (parent<(size>>1)){
+		int max_child = (parent << 1) + 1;
+		//调整左右子树的最大值
+		if (max_child < (size-2) && array[max_child] < array[max_child + 1])
+			++max_child;
+		//调整树
+		if (array[parent] < array[max_child])
+			swap(array[parent], array[max_child]);
+		parent = max_child;
+	}
+}
+
+
+void HeapSort(int array[], int size){
+	int lastnleaf = (size >> 1) - 1;//最后一个非叶子节点的下标
+	//构堆
+	for (int i = lastnleaf; i >= 0; --i){
+		AdjustDown(array, i,size);
+	}
+	//堆顶元素依次为最大值，从堆中拿出最大值调整最大值在数组中的位置
+	for (size_t i = 0; i < size; ++i){
+		swap(array[0], array[size - 1 - i]);
+		AdjustDown(array, 0, size - i - 1);
+	}
+}
+
+void bubble_sort(int arr[], int sz)
+{
+	int i = 0;
+	int j = 0;
+	for (i = 0; i<sz - 1; i++)
+	{
+		for (j = 0; j<sz - 1 - i; j++)
+		{
+			if (arr[j] > arr[j + 1])
+			{
+				arr[j] ^= arr[j + 1];
+				arr[j + 1] ^= arr[j];
+				arr[j] ^= arr[j + 1];
+			}
+		}
+	}
+}
+
 void Print(int array[], size_t size){
 	for (size_t i = 0; i < size; ++i){
 		cout << array[i] << "  ";
