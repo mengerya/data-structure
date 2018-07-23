@@ -3,6 +3,7 @@
 #include<string>
 #include<assert.h>
 
+
 typedef struct CharInfo{
 	CharInfo()
 	:ch_count(0)
@@ -10,8 +11,25 @@ typedef struct CharInfo{
 
 	CharInfo(const char c)
 		:ch(c)
-		, ch_count(1)
 	{}
+	long long operator!=(const CharInfo& info)
+	{
+		return ch_count != info.ch_count;
+	}
+	CharInfo operator+(const CharInfo& info)
+	{
+		CharInfo ret;
+		ret.ch_count = ch_count + info.ch_count;
+		return ret;
+	}
+	bool operator>(const CharInfo& info) const
+	{
+		return ch_count > info.ch_count;
+	}
+	bool operator<(const CharInfo& info) const
+	{
+		return ch_count < info.ch_count;
+	}
 	char ch;//字符信息
 	long long ch_count;//字符出现的次数
 	string str_Code;//字符的哈夫曼编码
@@ -52,9 +70,42 @@ public:
 		//5.按照字符编码重新改写文件
 		FILE* fOut = fopen("output.txt", "w");
 		assert(fOut);
+		char ch = 0;
+		char buf_out[1024] = { 0 };
+		int flag = 0;
+		string str;
+		int count = 0;
 
-
-
+		fseek(fIn, 0, SEEK_SET);//将文件指针偏移到文件开始位置
+		while (1){
+			size_t rdsize = fread(readbuf, 1, 1024, fIn);
+			if (rdsize == 0)
+				break;
+			char c_no = 0;
+			for (size_t i = 0; i < rdsize; ++i){
+				str = _charInfo[readbuf[i]].str_Code;
+				for (size_t j = 0; j < str.size(); ++j){
+					ch << 1;
+					if (str[j] == '1'){
+						ch |= 1;
+						flag++;
+					}
+					if (flag == 8){
+						buf_out[count++] = ch;
+						ch = 0;
+						flag = 0;
+					}
+					if (1024 == count){
+						/*size_t rdsize = fread(readbuf, 1, 1024, fIn);*/
+						fread(buf_out, 1, 1024, fOut);
+						count = 0;
+					}
+				}
+				ch << (8 - flag);
+				buf_out[count] = ch;
+				fread(buf_out, 1, count+1, fOut);
+			}
+		}
 	}
 private:
 	void _GetHuffCode(HuffNode<CharInfo>* & root){
@@ -87,3 +138,9 @@ private:
 private:
 	CharInfo _charInfo[256];//所有字符的数组集合，数组里放的是自定义的CharInfo类型
 };
+
+
+void test(){
+	CharCompress Charcom;
+	Charcom.CompressFile("./input.txt");
+}
