@@ -4,15 +4,25 @@
 #include<assert.h>
 
 
-typedef struct CharInfo{
+typedef class CharInfo{
+public:
 	CharInfo()
 	:ch_count(0)
+	, str_Code("")
+	{}
+
+	CharInfo(const CharInfo& c)
+		:ch(c.ch)
+		, ch_count(c.ch_count)
+		, str_Code(c.str_Code)
 	{}
 
 	CharInfo(const char c)
 		:ch(c)
+		, ch_count(0)
+		, str_Code("")
 	{}
-	long long operator!=(const CharInfo& info)
+	bool operator!=(const CharInfo& info)
 	{
 		return ch_count != info.ch_count;
 	}
@@ -71,7 +81,7 @@ public:
 		FILE* fOut = fopen("output.txt", "w");
 		assert(fOut);
 		char ch = 0;
-		char buf_out[1024] = { 0 };
+		char* buf_out = new char[1024];
 		int flag = 0;
 		string str;
 		int count = 0;
@@ -85,27 +95,35 @@ public:
 			for (size_t i = 0; i < rdsize; ++i){
 				str = _charInfo[readbuf[i]].str_Code;
 				for (size_t j = 0; j < str.size(); ++j){
-					ch << 1;
+					ch <<= 1;
 					if (str[j] == '1'){
 						ch |= 1;
-						flag++;
+						
 					}
+					flag++;
 					if (flag == 8){
 						buf_out[count++] = ch;
+						if (1024 == count){
+							/*size_t rdsize = fread(readbuf, 1, 1024, fIn);*/
+							fwrite(buf_out, 1, 1024, fOut);
+							count = 0;
+						}
 						ch = 0;
 						flag = 0;
 					}
-					if (1024 == count){
-						/*size_t rdsize = fread(readbuf, 1, 1024, fIn);*/
-						fread(buf_out, 1, 1024, fOut);
-						count = 0;
-					}
+					
 				}
-				ch << (8 - flag);
-				buf_out[count] = ch;
-				fread(buf_out, 1, count+1, fOut);
+				
 			}
 		}
+		if (flag<8)
+			ch <<= (8 - flag);
+		buf_out[count] = ch;
+		fwrite(buf_out, 1, count, fOut);
+		delete[] readbuf;
+		delete[] buf_out;
+		fclose(fIn);
+		fclose(fOut);
 	}
 private:
 	void _GetHuffCode(HuffNode<CharInfo>* & root){
@@ -115,13 +133,12 @@ private:
 		}
 		_GetHuffCode(root->_pLeft);
 		_GetHuffCode(root->_pRight);
-
 		if (root->_pLeft == NULL && root->_pRight == NULL){
 			//找到叶子节点
 			//规定右为0，左为1
 			HuffNode<CharInfo>* pCur = root;
 			HuffNode<CharInfo>* pParent = pCur->_pParent;
-			string& str = root->_weight.str_Code;
+			string& str = _charInfo[root->_weight.ch].str_Code;  //root->_weight.str_Code;
 			while (pParent){
 				if (pParent->_pLeft == pCur){
 					str += '1';
@@ -133,6 +150,9 @@ private:
 				pParent = pCur->_pParent;
 			}
 		}
+		
+
+		
 		return;
 	}
 private:
